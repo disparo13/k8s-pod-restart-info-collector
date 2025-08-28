@@ -19,19 +19,25 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/pointer"
 )
 
 const (
 	SlackChannelKey = "alert-slack-channel"
 )
 
+// Controller manages pod restart events, collects related information, and sends notifications to Slack.
+// Fields:
+// - clientset: Kubernetes client interface for API interactions.
+// - slack: Slack integration for sending alerts.
+// - informerFactory: Shared informer factory for resource informers.
+// - podInformer: Pod informer for watching pod events.
+// - queue: Workqueue for processing pod events.
 type Controller struct {
 	clientset       kubernetes.Interface
 	slack           Slack
 	informerFactory informers.SharedInformerFactory
 	podInformer     coreinformers.PodInformer
-	queue           workqueue.RateLimitingInterface
+	queue           workqueue.TypedRateLimitingInterface[string]
 }
 
 // NewController creates a new Controller.
@@ -39,7 +45,7 @@ func NewController(clientset kubernetes.Interface, slack Slack) *Controller {
 	const resyncPeriod = 0
 	ignoreRestartCount := getIgnoreRestartCount()
 
-	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
+	queue := workqueue.NewTypedRateLimitingQueue(workqueue.DefaultTypedControllerRateLimiter[string]())
 	informerFactory := informers.NewSharedInformerFactory(clientset, resyncPeriod)
 	podInformer := informerFactory.Core().V1().Pods()
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -132,7 +138,7 @@ func (c *Controller) processNextItem() bool {
 	defer c.queue.Done(key)
 
 	// Invoke the method containing the business logic
-	err := c.getAndHandlePod(key.(string))
+	err := c.getAndHandlePod(key)
 	// Handle the error if something went wrong during the execution of the business logic
 	c.handleErr(err, key)
 	return true
@@ -144,21 +150,21 @@ func (c *Controller) handleErr(err error, key interface{}) {
 		// Forget about the #AddRateLimited history of the key on every successful synchronization.
 		// This ensures that future processing of updates for this key is not delayed because of
 		// an outdated error history.
-		c.queue.Forget(key)
+		c.queue.Forget(key.(string))
 		return
 	}
 
 	// This controller retries 3 times if something goes wrong. After that, it stops trying.
-	if c.queue.NumRequeues(key) < 3 {
+	if c.queue.NumRequeues(key.(string)) < 3 {
 		klog.Infof("Error syncing Pod %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
-		c.queue.AddRateLimited(key)
+		c.queue.AddRateLimited(key.(string))
 		return
 	}
 
-	c.queue.Forget(key)
+	c.queue.Forget(key.(string))
 	// Report to an external entity that, even after several retries, we could not successfully process this key
 	runtime.HandleError(err)
 	klog.Infof("Dropping Pod %q out of the queue: %v", key, err)
@@ -346,11 +352,12 @@ func (c *Controller) getNodeAndEvents(pod *v1.Pod) (out string, err error) {
 
 // getContainerLogs gets previous terminated container logs
 func (c *Controller) getContainerLogs(pod *v1.Pod, containerStatus v1.ContainerStatus) (out string, err error) {
+	tailLines := int64(50)
 	logOptions := &v1.PodLogOptions{
 		Container:  containerStatus.Name,
 		Previous:   true,
 		Timestamps: true,
-		TailLines:  pointer.Int64Ptr(50),
+		TailLines:  &tailLines,
 	}
 	rc, err := c.clientset.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, logOptions).Stream(context.TODO())
 	if err != nil {
