@@ -28,7 +28,7 @@ ignoreRestartsWithExitCodeZero: false
 
 image:
   repository: devopsairwallex/k8s-pod-restart-info-collector
-  tag: "v1.4.0"
+  tag: "v1.5.1"
 
 resources: 
   limits:

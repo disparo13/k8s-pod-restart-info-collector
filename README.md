@@ -6,6 +6,8 @@ For more information, see the blog on Medium: [Automated Troubleshooting of Kube
 
 This project is actively used and maintained by Airwallex DevOps team.
 
+Since version v1.5.1, this fork is maintained by Aleksandr Mikheev (@disparo13) as a Hobby project with no support or warranties - use it at your own risk!
+
 ## Overview of the Data Collected
 
 Here are two Slack screenshots of the example messages.
