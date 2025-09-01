@@ -74,19 +74,20 @@ helm uninstall k8s-pod-restart-info-collector
 
 | Name                                | Description                                        | Value         |
 | ------------------------------------| -------------------------------------------------- | ------------- |
-| `clusterName`                       | K8s cluster name (Display on slack message)                        | required         |
-| `slackUsername`                     | Slack username (Display on slack message) | default: `"k8s-pod-restart-info-collector"`          |
-| `slackChannel`                      | Slack channel name | default: `"restart-info-nonprod"`          |
-| `muteSeconds`                       | The time to mute duplicate pod alerts | default: `"600"`    
-| `ignoreRestartCount`                | The number of pod restart count to ignore | default: `"30"`
-| `ignoredNamespaces`                 | A set of namespaces to be ignored. This should be provided as a comma-separated list or a regular expression. | default: `""`    
-| `ignoredPodNamePrefixes`            | A set of pod name prefixes to be ignored. This should be provided as a comma-separated list or a regular expression. | default: `""`   
-| `watchedNamespaces`                 | A set of namespaces to be watched. This should be provided as a comma-separated list or a regular expression. | default: `""`    
-| `watchedPodNamePrefixes`            | A set of pod name prefixes to be watched. This should be provided as a comma-separated list or a regular expression. | default: `""`   
-| `ignoreRestartsWithExitCodeZero`    | Whether restart events with an exit code of 0 should be ignored | default: `false`
-| `slackWebhookUrl`                   | Slack webhook URL | required if slackWebhooUrlSecretKeyRef is not present                       |
-| `slackWebhookurlSecretKeyRef.key`   | Slack webhook URL SecretKeyRef.key                 | |
-| `slackWebhookurlSecretKeyRef.name`  | Slack webhook URL SecretKeyRef.name                | |
+| `allowedRestartReasons`             | A set of allowed restart reasons to be sent. This should be provided as a comma-separated list. If not set - sends everything. | default: `""`|
+| `clusterName`                       | K8s cluster name (Display on slack message)        | required      |
+| `ignoreRestartCount`                | The number of pod restart count to ignore          | default: `"30"`|
+| `ignoreRestartsWithExitCodeZero`    | Whether restart events with an exit code of 0 should be ignored | default: `false`|
+| `ignoredNamespaces`                 | A set of namespaces to be ignored. This should be provided as a comma-separated list or a regular expression. | default: `""`|
+| `ignoredPodNamePrefixes`            | A set of pod name prefixes to be ignored. This should be provided as a comma-separated list or a regular expression. | default: `""`|
+| `muteSeconds`                       | The time to mute duplicate pod alerts              | default: `"600"`|
+| `slackChannel`                      | Slack channel name                                 | default: `"restart-info-nonprod"`|
+| `slackUsername`                     | Slack username (Display on slack message)          | default: `"k8s-pod-restart-info-collector"`|
+| `slackWebhookUrl`                   | Slack webhook URL                                  | required if slackWebhooUrlSecretKeyRef is not present|
+| `slackWebhookurlSecretKeyRef.key`   | Slack webhook URL SecretKeyRef.key                 |               |
+| `slackWebhookurlSecretKeyRef.name`  | Slack webhook URL SecretKeyRef.name                |               |
+| `watchedNamespaces`                 | A set of namespaces to be watched. This should be provided as a comma-separated list or a regular expression. | default: `""`|
+| `watchedPodNamePrefixes`            | A set of pod name prefixes to be watched. This should be provided as a comma-separated list or a regular expression. | default: `""`|
 
 ## FAQ
 
