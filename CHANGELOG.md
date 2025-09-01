@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v1.5.1] - 2025-09-01
 ### Fixed
 
-- Updated modules and Go version, removed deprecated modules
+- Updated modules and Go version, removed deprecated functions
 
 ## [v1.5.0] - 2023-09-20
 ### Added
