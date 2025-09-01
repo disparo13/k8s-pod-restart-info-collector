@@ -49,7 +49,7 @@ func NewController(clientset kubernetes.Interface, slack Slack) *Controller {
 	informerFactory := informers.NewSharedInformerFactory(clientset, resyncPeriod)
 	podInformer := informerFactory.Core().V1().Pods()
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		UpdateFunc: func(old interface{}, new interface{}) {
+		UpdateFunc: func(old any, new any) {
 			oldPod, ok := old.(*v1.Pod)
 			if !ok {
 				return
@@ -113,7 +113,7 @@ func (c *Controller) Run(workers int, stopCh chan struct{}) {
 		return
 	}
 
-	for i := 0; i < workers; i++ {
+	for range workers {
 		go wait.Until(c.runWorker, time.Second, stopCh)
 	}
 
@@ -145,7 +145,7 @@ func (c *Controller) processNextItem() bool {
 }
 
 // handleErr checks if an error happened and makes sure we will retry later.
-func (c *Controller) handleErr(err error, key interface{}) {
+func (c *Controller) handleErr(err error, key any) {
 	if err == nil {
 		// Forget about the #AddRateLimited history of the key on every successful synchronization.
 		// This ensures that future processing of updates for this key is not delayed because of
@@ -242,6 +242,12 @@ func (c *Controller) handlePod(pod *v1.Pod) error {
 		}
 
 		restartReason := printContainerLastStateReason(status)
+
+		// Skip if restart reason is not allowed
+		if !isAllowedRestartReason(restartReason) {
+			klog.Infof("Ignore: %s restart reason '%s' is not allowed to be sent\n", podKey, restartReason)
+			continue
+		}
 
 		var containerSpec v1.Container
 		for _, container := range pod.Spec.Containers {

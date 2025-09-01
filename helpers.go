@@ -28,13 +28,28 @@ func getPodRestartCount(pod *v1.Pod) int {
 	return restarts
 }
 
+func isAllowedRestartReason(reason string) bool {
+	allowedRestartReasonsEnv := os.Getenv("ALLOWED_RESTART_REASONS")
+	if allowedRestartReasonsEnv == "" {
+		return true
+	}
+	allowedRestartReasons := strings.Split(allowedRestartReasonsEnv, ",")
+	for _, allowedRestartReason := range allowedRestartReasons {
+		match, _ := regexp.MatchString(allowedRestartReason, reason)
+		if match {
+			return true
+		}
+	}
+	return false
+}
+
 func isIgnoredNamespace(namespace string) bool {
 	ignoredNamespacesEnv := os.Getenv("IGNORED_NAMESPACES")
 	if ignoredNamespacesEnv == "" {
 		return false
 	}
-	ignoredNamespaces := strings.Split(ignoredNamespacesEnv, ",")
-	for _, ignoredNamespace := range ignoredNamespaces {
+	ignoredNamespaces := strings.SplitSeq(ignoredNamespacesEnv, ",")
+	for ignoredNamespace := range ignoredNamespaces {
 		match, _ := regexp.MatchString(ignoredNamespace, namespace)
 		if match {
 			klog.Infof("Ignore: namespace %s is in the ignored namespace list\n", namespace)
@@ -49,8 +64,8 @@ func isIgnoredPod(name string) bool {
 	if ignoredPodNamePrefixesEnv == "" {
 		return false
 	}
-	ignoredPodNamePrefixes := strings.Split(ignoredPodNamePrefixesEnv, ",")
-	for _, ignoredPodNamePrefix := range ignoredPodNamePrefixes {
+	ignoredPodNamePrefixes := strings.SplitSeq(ignoredPodNamePrefixesEnv, ",")
+	for ignoredPodNamePrefix := range ignoredPodNamePrefixes {
 		match, _ := regexp.MatchString(ignoredPodNamePrefix, name)
 		if match {
 			klog.Infof("Ignore: pod %s has ignored name prefix: %s\n", name, ignoredPodNamePrefix)
@@ -65,8 +80,8 @@ func isWatchedNamespace(namespace string) bool {
 	if watchedNamespacesEnv == "" {
 		return true
 	}
-	watchedNamespaces := strings.Split(watchedNamespacesEnv, ",")
-	for _, watchedNamespace := range watchedNamespaces {
+	watchedNamespaces := strings.SplitSeq(watchedNamespacesEnv, ",")
+	for watchedNamespace := range watchedNamespaces {
 		match, _ := regexp.MatchString(watchedNamespace, namespace)
 		if match {
 			return true
@@ -83,8 +98,8 @@ func isWatchedPod(name string) bool {
 	if watchedPodNamePrefixesEnv == "" {
 		return true
 	}
-	watchedPodNamePrefixes := strings.Split(watchedPodNamePrefixesEnv, ",")
-	for _, watchedPodNamePrefix := range watchedPodNamePrefixes {
+	watchedPodNamePrefixes := strings.SplitSeq(watchedPodNamePrefixesEnv, ",")
+	for watchedPodNamePrefix := range watchedPodNamePrefixes {
 		match, _ := regexp.MatchString(watchedPodNamePrefix, name)
 		if match {
 			return true
