@@ -28,11 +28,13 @@ spec:
       containers:
         - name: collector
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           command: ["/k8s-pod-restart-info-collector"]
           env:
+            - name: ALLOWED_RESTART_REASONS
+              value: {{ .Values.allowedRestartReasons | quote}}
             - name: CLUSTER_NAME
-              value: {{ required "service name is required" .Values.clusterName | quote}}
+              value: {{ required "clusterName name is required" .Values.clusterName | quote}}
             - name: SLACK_CHANNEL
               value: {{ .Values.slackChannel | quote}}
             - name: SLACK_USERNAME

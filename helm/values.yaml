@@ -26,13 +26,18 @@ watchedPodNamePrefixes: ""
 # Whether restart events with an exit code of 0 should be ignored, true or false
 ignoreRestartsWithExitCodeZero: false
 
+# A set of allowed restart reasons to be sent. This should be provided as a comma-separated list.
+# Example: "OOMKilled.*,Error.*" - that will pass all OOMKilled and Error reasons
+allowedRestartReasons: ""
+
 image:
-  repository: devopsairwallex/k8s-pod-restart-info-collector
-  tag: "v1.5.1"
+  repository: disparo/k8s-pod-restart-info-collector
+  tag: "v1.6.1"
+  pullPolicy: IfNotPresent
 
 resources: 
   limits:
-    cpu: 50m
+    cpu: 100m
     memory: 100Mi
   requests:
     cpu: 20m
